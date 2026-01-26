@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Loading } from "@/components/ui/loading";
 import { useToast } from "@/components/ui/toast";
-import { Save, Store, Phone, Instagram, MapPin } from "lucide-react";
+import { Save, Store, Phone, Instagram, MapPin, Copy, Check } from "lucide-react";
 
 const STATES = [
   { value: "AC", label: "Acre" },
@@ -57,6 +57,8 @@ export function SettingsForm() {
   const [store, setStore] = React.useState<StoreData | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isCopied, setIsCopied] = React.useState(false);
+
   const [formData, setFormData] = React.useState({
     name: "",
     description: "",
@@ -66,6 +68,15 @@ export function SettingsForm() {
     state: "",
     address: "",
   });
+
+  const handleCopyLink = () => {
+    if (!store?.slug) return;
+    const link = `${window.location.origin}/${store.slug}`;
+    navigator.clipboard.writeText(link);
+    setIsCopied(true);
+    showToast("Link copiado para a área de transferência!", "success");
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   React.useEffect(() => {
     const fetchStore = async () => {
@@ -167,13 +178,32 @@ export function SettingsForm() {
             onChange={handleChange}
             placeholder="Descreva sua loja em poucas palavras..."
           />
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600">
-              <span className="font-medium">Seu link:</span>{" "}
-              <span className="text-green-600">
+          <div className="p-3 bg-gray-50 rounded-lg flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-700 block mb-0.5">Seu link</p>
+              <p className="text-sm text-primary font-medium truncate">
                 {typeof window !== 'undefined' ? window.location.origin : ''}/{store?.slug ?? ''}
-              </span>
-            </p>
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 min-w-[90px]"
+              onClick={handleCopyLink}
+              type="button"
+            >
+              {isCopied ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  Copiar
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>

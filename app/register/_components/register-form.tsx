@@ -92,6 +92,8 @@ export function RegisterForm() {
         value={formData?.name ?? ''}
         onChange={handleChange}
         error={errors?.name}
+        className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10 focus:border-primary/50 hover:bg-white/10 transition-colors"
+        labelClassName="text-gray-300"
         icon={<User className="h-5 w-5" />}
       />
       <Input
@@ -102,6 +104,8 @@ export function RegisterForm() {
         value={formData?.email ?? ''}
         onChange={handleChange}
         error={errors?.email}
+        className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10 focus:border-primary/50 hover:bg-white/10 transition-colors"
+        labelClassName="text-gray-300"
         icon={<Mail className="h-5 w-5" />}
       />
       <Input
@@ -112,6 +116,8 @@ export function RegisterForm() {
         value={formData?.password ?? ''}
         onChange={handleChange}
         error={errors?.password}
+        className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10 focus:border-primary/50 hover:bg-white/10 transition-colors"
+        labelClassName="text-gray-300"
         icon={<Lock className="h-5 w-5" />}
       />
       <Input
@@ -122,9 +128,11 @@ export function RegisterForm() {
         value={formData?.confirmPassword ?? ''}
         onChange={handleChange}
         error={errors?.confirmPassword}
+        className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10 focus:border-primary/50 hover:bg-white/10 transition-colors"
+        labelClassName="text-gray-300"
         icon={<Lock className="h-5 w-5" />}
       />
-      <Button type="submit" className="w-full" isLoading={isLoading}>
+      <Button type="submit" className="w-full h-12 text-base font-semibold shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] transition-all rounded-xl" isLoading={isLoading}>
         Criar Conta
       </Button>
     </form>

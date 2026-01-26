@@ -4,10 +4,10 @@ import * as React from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { PageLoading } from "@/components/ui/loading";
 import {
-  Zap,
   LayoutDashboard,
   Palette,
   Settings,
@@ -46,7 +46,6 @@ export function DashboardLayoutClient({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [storeStatus, setStoreStatus] = React.useState<StoreStatus | null>(null);
-  const [loadingStatus, setLoadingStatus] = React.useState(true);
 
   // Buscar status da loja
   React.useEffect(() => {
@@ -60,9 +59,6 @@ export function DashboardLayoutClient({
         })
         .catch((error) => {
           console.error("Erro ao buscar status da loja:", error);
-        })
-        .finally(() => {
-          setLoadingStatus(false);
         });
     }
   }, [status, session]);
@@ -77,7 +73,7 @@ export function DashboardLayoutClient({
   }, [status, session, router]);
 
   if (status === "loading") {
-    return <PageLoading />;
+    return <PageLoading />; // Ensure PageLoading is compatible with dark mode or is neutral
   }
 
   if (status === "unauthenticated" || !(session?.user as any)?.hasStore) {
@@ -87,29 +83,27 @@ export function DashboardLayoutClient({
   const storeSlug = (session?.user as any)?.storeSlug ?? '';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-gray-900">EletroMoto</span>
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm h-[60px]">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 relative flex items-center justify-center bg-primary/10 rounded-lg">
+            <Image src="/brand/icon.svg" alt="Logo" fill className="object-contain p-1.5" />
           </div>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100"
-          >
-            {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <span className="font-bold text-gray-900 tracking-tight">EletroMoto</span>
         </div>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
       </header>
 
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-30 bg-black/50"
+          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -117,26 +111,27 @@ export function DashboardLayoutClient({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-40 h-full w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static flex-shrink-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
-                <Zap className="h-6 w-6 text-white" />
+        <div className="flex flex-col h-full relative">
+          {/* Logo Area */}
+          <div className="p-6 border-b border-gray-100 hidden lg:block">
+            <Link href="/dashboard" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 relative flex items-center justify-center bg-primary/10 rounded-xl group-hover:scale-105 transition-transform">
+                <Image src="/brand/icon.svg" alt="Logo" fill className="object-contain p-2" />
               </div>
               <div>
-                <span className="font-bold text-gray-900">EletroMoto</span>
-                <p className="text-xs text-gray-500">Catálogo Digital</p>
+                <span className="font-bold text-lg text-gray-900 tracking-tight group-hover:text-primary transition-colors">EletroMoto</span>
+                <p className="text-[11px] text-gray-500 font-medium uppercase tracking-wider">Dashboard</p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar pt-[80px] lg:pt-6">
+            <div className="px-3 mb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Menu Principal</div>
             {navItems?.map?.((item) => {
               const Icon = item?.icon ?? LayoutDashboard;
               const isActive = pathname === item?.href;
@@ -146,13 +141,13 @@ export function DashboardLayoutClient({
                   href={item?.href ?? ''}
                   onClick={() => setSidebarOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
                     isActive
-                      ? "bg-green-50 text-green-700"
+                      ? "bg-primary/10 text-primary"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className={cn("h-5 w-5 transition-transform", isActive && "text-primary")} />
                   {item?.label ?? ''}
                 </Link>
               );
@@ -160,82 +155,83 @@ export function DashboardLayoutClient({
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200 space-y-2">
+          <div className="p-4 border-t border-gray-100 bg-gray-50/50 space-y-3">
+            <div className="px-1 mb-1">
+              <p className="text-xs text-gray-500 font-medium truncate">Loja: <span className="text-gray-900 font-semibold">{storeSlug}</span></p>
+            </div>
             {storeSlug && (
               <Link
                 href={`/${storeSlug}`}
                 target="_blank"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-green-600 hover:bg-green-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-transparent transition-all"
               >
-                <ExternalLink className="h-5 w-5" />
-                Ver Meu Catálogo
+                <ExternalLink className="h-3.5 w-3.5" />
+                Ver Minha Loja
               </Link>
             )}
             <button
               onClick={() => signOut?.({ callbackUrl: "/" })}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors w-full"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors w-full justify-center"
             >
-              <LogOut className="h-5 w-5" />
-              Sair
+              <LogOut className="h-3.5 w-3.5" />
+              Sair da conta
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 min-h-screen">
-        {/* Banner de Suspensão */}
-        {storeStatus?.isSuspended && (
-          <div className={cn(
-            "border-l-4 p-4 m-4 lg:m-8 mb-0",
-            storeStatus.suspensionType === "pending_activation" 
-              ? "bg-blue-50 border-blue-500" 
-              : "bg-red-50 border-red-500"
-          )}>
-            <div className="flex items-start gap-3">
-              <AlertTriangle className={cn(
-                "h-6 w-6 flex-shrink-0 mt-0.5",
-                storeStatus.suspensionType === "pending_activation"
-                  ? "text-blue-600"
-                  : "text-red-600"
-              )} />
-              <div className="flex-1">
-                {storeStatus.suspensionType === "pending_activation" ? (
-                  <>
-                    <h3 className="text-blue-800 font-semibold text-lg mb-1">
-                      🎉 Bem-vindo ao seu Catálogo Digital!
-                    </h3>
-                    <p className="text-blue-700 mb-2">
-                      Sua conta foi criada com sucesso! Para ativar seu catálogo e começar a vender, entre em contato com nosso suporte.
-                    </p>
-                    <p className="text-blue-600 text-sm">
-                      Enquanto isso, você pode configurar sua loja, adicionar produtos e personalizar a identidade visual.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="text-red-800 font-semibold text-lg mb-1">
-                      Catálogo Suspenso
-                    </h3>
-                    <p className="text-red-700 mb-2">
-                      Sua assinatura está desativada. Entre em contato com o suporte para reativar.
-                    </p>
-                    {storeStatus.suspendedReason && (
-                      <p className="text-red-600 text-sm">
-                        <strong>Motivo:</strong> {storeStatus.suspendedReason}
+      <main className="flex-1 w-full min-w-0 flex flex-col h-full bg-gray-50 overflow-hidden pt-[60px] lg:pt-0">
+
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth">
+          {/* Banner de Suspensão */}
+          {storeStatus?.isSuspended && (
+            <div className={cn(
+              "border-l-4 p-4 mb-6 rounded-r-lg shadow-sm border",
+              storeStatus.suspensionType === "pending_activation"
+                ? "bg-blue-50 border-l-blue-500 border-blue-100"
+                : "bg-red-50 border-l-red-500 border-red-100"
+            )}>
+              <div className="flex items-start gap-3">
+                <AlertTriangle className={cn(
+                  "h-5 w-5 flex-shrink-0 mt-0.5",
+                  storeStatus.suspensionType === "pending_activation"
+                    ? "text-blue-600"
+                    : "text-red-600"
+                )} />
+                <div className="flex-1">
+                  {storeStatus.suspensionType === "pending_activation" ? (
+                    <>
+                      <h3 className="text-blue-800 font-semibold text-base mb-1">
+                        🎉 Bem-vindo ao seu Catálogo Digital!
+                      </h3>
+                      <p className="text-blue-700 text-sm mb-2 leading-relaxed">
+                        Sua conta foi criada com sucesso! Para ativar seu catálogo e começar a vender, entre em contato com nosso suporte.
                       </p>
-                    )}
-                    <p className="text-red-600 text-sm mt-2">
-                      Seu catálogo está indisponível para visualização dos clientes, mas você ainda pode gerenciar produtos e configurações.
-                    </p>
-                  </>
-                )}
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-red-800 font-semibold text-base mb-1">
+                        Catálogo Suspenso
+                      </h3>
+                      <p className="text-red-700 text-sm mb-2 leading-relaxed">
+                        Sua assinatura está desativada. Entre em contato com o suporte para reativar.
+                      </p>
+                      {storeStatus.suspendedReason && (
+                        <p className="text-red-600 text-sm mt-1">
+                          <strong>Motivo:</strong> {storeStatus.suspendedReason}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        
-        <div className="p-4 lg:p-8">{children}</div>
+          )}
+
+          <div className="max-w-6xl mx-auto pb-10">{children}</div>
+        </div>
       </main>
     </div>
   );
