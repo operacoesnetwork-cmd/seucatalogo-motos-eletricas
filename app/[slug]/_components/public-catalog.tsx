@@ -80,7 +80,7 @@ function StoreHeader({ store }: { store: Store }) {
   const primaryColor = store.primaryColor || '#7c3aed';
 
   return (
-    <div className="relative overflow-hidden bg-gray-900 pb-12">
+    <div className="relative overflow-hidden bg-gray-900 pb-20">
       {/* Banner Background */}
       <div className="absolute inset-0 z-0">
         {store.bannerUrl ? (
@@ -104,7 +104,7 @@ function StoreHeader({ store }: { store: Store }) {
         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
           {/* Logo */}
           <div className="relative">
-            <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden border-4 border-white/10 shadow-2xl bg-white flex items-center justify-center">
+            <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden border-4 border-white/10 shadow-2xl bg-white flex items-center justify-center">
               {store.logoUrl ? (
                 <Image
                   src={store.logoUrl}
@@ -409,17 +409,17 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
       </div>
 
       {/* Modern Footer */}
-      <footer className="bg-gray-900 text-white py-12 border-t border-gray-800">
+      <footer className="bg-[#160b25] text-white py-12 border-t border-[#2a1740]">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
-              <Zap className="h-5 w-5 text-white fill-white" />
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center backdrop-blur-sm">
+              <Zap className="h-5 w-5 text-white/50 fill-white/50" />
             </div>
-            <span className="font-bold text-lg tracking-tight">EletroMoto</span>
+            <span className="font-bold text-lg tracking-tight text-white/50">EletroMoto</span>
           </div>
 
-          <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} {store.name}. Todos os direitos reservados.
+          <p className="text-gray-600 text-sm">
+            © {new Date().getFullYear()} Desenvolvido por <a href="/" className="font-medium hover:text-gray-400 transition-colors">NTEC</a>.
           </p>
         </div>
       </footer>

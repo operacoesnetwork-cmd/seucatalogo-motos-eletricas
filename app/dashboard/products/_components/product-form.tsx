@@ -36,7 +36,7 @@ export function ProductForm({ productId }: ProductFormProps) {
   const [isSaving, setIsSaving] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: "",
-    category: "moto_eletrica",
+    category: "autopropelido",
     mainImageKey: "",
     mainImageUrl: "",
     galleryKeys: [] as string[],
@@ -204,15 +204,15 @@ export function ProductForm({ productId }: ProductFormProps) {
             label="Imagem Principal *"
             value={formData?.mainImageUrl ?? ''}
             onChange={(url, key) =>
-              setFormData((prev) => ({ 
-                ...(prev ?? {}), 
+              setFormData((prev) => ({
+                ...(prev ?? {}),
                 mainImageUrl: url,
                 mainImageKey: key ?? ''
               }))
             }
             onRemove={() =>
-              setFormData((prev) => ({ 
-                ...(prev ?? {}), 
+              setFormData((prev) => ({
+                ...(prev ?? {}),
                 mainImageUrl: "",
                 mainImageKey: ""
               }))
@@ -226,8 +226,8 @@ export function ProductForm({ productId }: ProductFormProps) {
             values={formData?.galleryUrls ?? []}
             keys={formData?.galleryKeys ?? []}
             onChange={(urls, keys) =>
-              setFormData((prev) => ({ 
-                ...(prev ?? {}), 
+              setFormData((prev) => ({
+                ...(prev ?? {}),
                 galleryUrls: urls,
                 galleryKeys: keys ?? []
               }))
@@ -253,7 +253,7 @@ export function ProductForm({ productId }: ProductFormProps) {
               setFormData((prev) => ({ ...(prev ?? {}), showPrice: checked }))
             }
           />
-          
+
           {formData?.showPrice && (
             <>
               <Input
@@ -266,7 +266,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                 onChange={handleChange}
                 placeholder="0,00"
               />
-              
+
               <Switch
                 label="Ativar desconto"
                 checked={formData?.hasDiscount ?? false}
@@ -274,7 +274,7 @@ export function ProductForm({ productId }: ProductFormProps) {
                   setFormData((prev) => ({ ...(prev ?? {}), hasDiscount: checked }))
                 }
               />
-              
+
               {formData?.hasDiscount && (
                 <Input
                   label="Preço com Desconto (R$)"

@@ -48,13 +48,14 @@ export interface Product {
   updatedAt: Date;
 }
 
-export type ProductCategory = 'autopropelido' | 'ciclomotor' | 'moto_eletrica' | 'triciclo' | 'outros';
+export type ProductCategory = 'autopropelido' | 'ciclomotor' | 'moto_eletrica' | 'triciclo' | 'bike_eletrica' | 'outros';
 
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   autopropelido: 'Autopropelido',
   ciclomotor: 'Ciclomotor',
   moto_eletrica: 'Moto Elétrica',
   triciclo: 'Triciclo',
+  bike_eletrica: 'Bike Elétrica',
   outros: 'Outros',
 };
 
@@ -63,6 +64,7 @@ export const CATEGORY_OPTIONS = [
   { value: 'ciclomotor', label: 'Ciclomotor' },
   { value: 'moto_eletrica', label: 'Moto Elétrica' },
   { value: 'triciclo', label: 'Triciclo' },
+  { value: 'bike_eletrica', label: 'Bike Elétrica' },
   { value: 'outros', label: 'Outros' },
 ] as const;
 
