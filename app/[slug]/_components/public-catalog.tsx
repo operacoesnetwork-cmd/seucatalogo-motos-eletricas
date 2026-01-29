@@ -236,6 +236,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                     <Card
                       className="group h-full flex flex-col overflow-hidden border-transparent shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer rounded-2xl ring-1 ring-gray-100"
                       onClick={() => openProductModal(product)}
+                      style={{ '--store-primary': primaryColor } as React.CSSProperties}
                     >
                       {/* Image Area */}
                       <div className="aspect-[4/3] relative bg-gray-100 overflow-hidden group-hover:opacity-100">
@@ -268,20 +269,25 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                       </div>
 
                       {/* Content Area */}
-                      <CardContent className="p-5 flex-1 flex flex-col">
-                        <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                      <CardContent className="p-4 flex-1 flex flex-col">
+                        <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-[var(--store-primary)] transition-colors line-clamp-2">
                           {product.name}
                         </h3>
 
                         {/* Specs Mini Summary */}
-                        <div className="flex items-center gap-3 text-xs text-gray-500 mb-4 mt-2">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3 mt-1">
+                          {product.motorPower && (
+                            <div className="flex items-center gap-1" title="Potência">
+                              <Zap className="h-3 w-3" /> {product.motorPower}
+                            </div>
+                          )}
                           {product.maxSpeed && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1" title="Velocidade Máxima">
                               <Gauge className="h-3 w-3" /> {product.maxSpeed}
                             </div>
                           )}
                           {product.autonomy && (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1" title="Autonomia">
                               <Battery className="h-3 w-3" /> {product.autonomy}
                             </div>
                           )}
@@ -289,7 +295,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
 
                         {/* Colors Preview */}
                         {colors.length > 0 && (
-                          <div className="flex items-center gap-1 mb-4 mt-auto">
+                          <div className="flex items-center gap-1 mb-3">
                             {colors.slice(0, 4).map((c, i) => (
                               <div
                                 key={i}
@@ -304,36 +310,53 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                           </div>
                         )}
 
-                        <div className="mt-auto pt-4 border-t border-gray-50 flex items-end justify-between">
-                          <div className="flex flex-col">
-                            {product.showPrice ? (
-                              <>
-                                {hasDiscount && (
-                                  <span className="text-xs text-gray-400 line-through mb-0.5">
-                                    {formatPrice(product.basePrice)}
+                        <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-2">
+                          <div className="flex items-end justify-between">
+                            <div className="flex flex-col">
+                              {product.showPrice ? (
+                                <>
+                                  {hasDiscount && (
+                                    <span className="text-xs text-gray-400 line-through mb-0.5">
+                                      {formatPrice(product.basePrice)}
+                                    </span>
+                                  )}
+                                  <span className="text-lg font-bold" style={{ color: primaryColor }}>
+                                    {formatPrice(displayPrice)}
                                   </span>
-                                )}
-                                <span className="text-lg font-bold" style={{ color: primaryColor }}>
-                                  {formatPrice(displayPrice)}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-sm font-medium text-gray-500">Consulte valor</span>
-                            )}
+                                </>
+                              ) : (
+                                <span className="text-sm font-medium text-gray-500">Consulte valor</span>
+                              )}
+                            </div>
                           </div>
 
-                          <Button
-                            size="sm"
-                            className="rounded-full shadow-md hover:shadow-lg transition-all"
-                            style={{ backgroundColor: '#25D366', color: 'white' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openWhatsApp(product.name, store.whatsapp);
-                            }}
-                          >
-                            <MessageCircle className="h-4 w-4 md:mr-1" />
-                            <span className="hidden md:inline">Tenho Interesse</span>
-                          </Button>
+                          <div className="grid grid-cols-[auto_1fr] gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-10 w-10 p-0 rounded-full border-gray-200 hover:bg-gray-50 hover:text-primary transition-colors shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openProductModal(product);
+                              }}
+                              title="Mais detalhes"
+                            >
+                              <Info className="h-5 w-5 text-gray-600" />
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              className="h-10 w-full rounded-full shadow-md hover:shadow-xl transition-all font-semibold active:scale-95 flex items-center justify-center gap-2 group/btn"
+                              style={{ backgroundColor: '#25D366', color: 'white' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openWhatsApp(product.name, store.whatsapp);
+                              }}
+                            >
+                              <MessageCircle className="h-4 w-4 fill-white/20" />
+                              <span>Tenho Interesse</span>
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -411,29 +434,52 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
         {selectedProduct && (
           <div className="flex flex-col lg:flex-row h-full max-h-[90vh] lg:h-[600px]">
             {/* Gallery Section */}
-            <div className="w-full lg:w-3/5 bg-gray-100 relative group flex items-center justify-center p-8">
-              <div className="relative w-full h-full max-w-lg aspect-square lg:aspect-auto">
-                {allImages[currentImageIndex] && (
-                  <Image
-                    src={allImages[currentImageIndex]}
-                    alt={selectedProduct.name}
-                    fill
-                    className="object-contain mix-blend-multiply"
-                  />
-                )}
+            <div className="w-full lg:w-3/5 aspect-square lg:aspect-auto bg-gray-100 relative group flex items-center justify-center overflow-hidden shrink-0">
+              <div className="relative w-full h-full">
+                <AnimatePresence initial={false} mode="wait">
+                  {allImages[currentImageIndex] && (
+                    <motion.div
+                      key={currentImageIndex}
+                      className="relative w-full h-full"
+                      initial={{ opacity: 0, x: 100 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={1}
+                      onDragEnd={(e, { offset, velocity }) => {
+                        const swipe = Math.abs(offset.x) * velocity.x;
+                        if (swipe < -10000 || offset.x < -100) {
+                          nextImage();
+                        } else if (swipe > 10000 || offset.x > 100) {
+                          prevImage();
+                        }
+                      }}
+                    >
+                      <Image
+                        src={allImages[currentImageIndex]}
+                        alt={selectedProduct.name}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Navigation Buttons */}
               {allImages.length > 1 && (
                 <>
-                  <button onClick={prevImage} className="absolute left-4 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0">
+                  <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-4 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0">
                     <ChevronLeft className="h-6 w-6" />
                   </button>
-                  <button onClick={nextImage} className="absolute right-4 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0">
+                  <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-4 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0">
                     <ChevronRight className="h-6 w-6" />
                   </button>
 
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/10 backdrop-blur-md rounded-full">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/10 backdrop-blur-md rounded-full z-10">
                     {allImages.map((_, idx) => (
                       <button
                         key={idx}
