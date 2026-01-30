@@ -15,6 +15,7 @@ import {
   ExternalLink,
   ArrowRight,
 } from "lucide-react";
+import { ShareButton } from "@/components/ui/share-button";
 import { cn } from "@/lib/utils";
 
 interface StoreData {
@@ -72,12 +73,21 @@ export function DashboardOverview() {
           <p className="text-gray-500">Gerencie seu catálogo digital</p>
         </div>
         {store?.slug && (
-          <Link href={`/${store.slug}`} target="_blank">
-            <Button variant="soft">
-              <ExternalLink className="h-4 w-4" />
-              Ver Catálogo Online
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ShareButton
+              url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${store.slug}`}
+              title={store.name}
+              text={`Confira o catálogo da ${store.name}`}
+              variant="outline"
+              className="gap-2"
+            />
+            <Link href={`/${store.slug}`} target="_blank">
+              <Button variant="soft">
+                <ExternalLink className="h-4 w-4" />
+                Ver Catálogo Online
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
 

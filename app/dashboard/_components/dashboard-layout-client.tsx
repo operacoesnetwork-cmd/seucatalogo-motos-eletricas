@@ -18,6 +18,7 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
+import { ShareButton } from "@/components/ui/share-button";
 
 const navItems = [
   { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
@@ -169,6 +170,18 @@ export function DashboardLayoutClient({
                 <ExternalLink className="h-3.5 w-3.5" />
                 Ver Minha Loja
               </Link>
+            )}
+            {storeSlug && (
+              <ShareButton
+                url={`${typeof window !== 'undefined' ? window.location.origin : ''}/${storeSlug}`}
+                title={storeStatus?.name ?? "Minha Loja"}
+                text={`Confira o catálogo da ${storeStatus?.name ?? "loja"}`}
+                variant="outline"
+                size="sm"
+                className="w-full text-xs font-medium border-gray-200 hover:bg-white hover:text-primary transition-colors"
+              >
+                Compartilhar Link
+              </ShareButton>
             )}
             <button
               onClick={() => signOut?.({ callbackUrl: "/" })}

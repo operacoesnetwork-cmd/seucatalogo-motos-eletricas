@@ -29,6 +29,7 @@ import {
   Search,
   Filter,
 } from "lucide-react";
+import { ShareButton } from "@/components/ui/share-button";
 import { cn } from "@/lib/utils";
 
 // --- Types ---
@@ -119,6 +120,18 @@ function StoreHeader({ store }: { store: Store }) {
           </div>
 
           {/* Info */}
+          <div className="absolute top-0 right-0 p-4 z-20">
+            <ShareButton
+              url={typeof window !== 'undefined' ? window.location.href : ''}
+              title={store.name}
+              text={`Confira o catálogo da ${store.name}`}
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/10"
+              iconOnly
+            />
+          </div>
+
           <div className="flex-1 pb-2">
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
               {store.name}
