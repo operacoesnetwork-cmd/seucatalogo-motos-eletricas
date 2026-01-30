@@ -21,7 +21,7 @@ import {
 
 const navItems = [
   { href: "/dashboard", label: "Visão Geral", icon: LayoutDashboard },
-  { href: "/dashboard/identity", label: "Identidade Visual", icon: Palette },
+  { href: "/dashboard/identity", label: "Aparência", icon: Palette },
   { href: "/dashboard/settings", label: "Configurações", icon: Settings },
   { href: "/dashboard/products", label: "Produtos", icon: Package },
 ];
@@ -94,8 +94,9 @@ export function DashboardLayoutClient({
         </div>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-2 p-2 pr-1 rounded-lg text-primary hover:bg-primary/5 transition-colors"
         >
+          <span className="text-sm font-semibold uppercase tracking-wide">Menu</span>
           {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </header>

@@ -205,7 +205,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
       <StoreHeader store={store} />
 
       {/* Main Content Area */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 -mt-8 relative z-20 pb-20">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 -mt-8 relative z-20 pb-8">
 
         {/* Products Grid */}
         {store.products.length === 0 ? (
@@ -369,41 +369,94 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
       </div>
 
       {/* FAQ Section */}
-      <div className="bg-white border-t border-gray-100 py-16">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Dúvidas Frequentes</h2>
-          <p className="text-center text-gray-500 mb-10">Tudo o que você precisa saber sobre mobilidade elétrica</p>
+      <div className="bg-gradient-to-b from-white to-gray-50 py-12 relative overflow-hidden">
+        {/* Decorative top line */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
-          <div className="grid gap-4">
-            {FAQ_ITEMS.map((item, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "border rounded-2xl transition-all duration-300 overflow-hidden",
-                  expandedFaq === index ? "bg-gray-50 border-gray-200 shadow-inner" : "bg-white border-gray-200 hover:border-gray-300"
-                )}
-              >
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                  className="w-full flex items-center justify-between p-5 text-left"
-                >
-                  <span className="font-semibold text-gray-900 pr-8">{item.question}</span>
-                  {expandedFaq === index ? <ChevronUp className="h-5 w-5 text-gray-400" /> : <ChevronDown className="h-5 w-5 text-gray-400" />}
-                </button>
-                <AnimatePresence>
-                  {expandedFaq === index && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="px-5 pb-5 pt-0 text-gray-600 leading-relaxed"
-                    >
-                      {item.answer}
-                    </motion.div>
+        <div className="max-w-3xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-12">
+            <div
+              className="inline-flex items-center justify-center p-3 rounded-2xl mb-5 shadow-sm ring-1 ring-black/5"
+              style={{
+                backgroundColor: `${primaryColor}15`, // 15 = ~8% opacity hex equivalent
+                color: primaryColor
+              }}
+            >
+              <Info className="h-6 w-6" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+              Ficou com alguma dúvida?
+            </h2>
+            <p className="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+              Confira as respostas para as perguntas mais comuns sobre nossos veículos elétricos.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((item, index) => {
+              const isOpen = expandedFaq === index;
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className={cn(
+                    "bg-white rounded-2xl overflow-hidden transition-all duration-300",
+                    isOpen
+                      ? "shadow-lg ring-1 ring-black/5"
+                      : "shadow-sm hover:shadow-md border border-gray-100 hover:border-gray-200"
                   )}
-                </AnimatePresence>
-              </div>
-            ))}
+                >
+                  <button
+                    onClick={() => setExpandedFaq(isOpen ? null : index)}
+                    className="w-full flex items-center justify-between p-6 text-left focus:outline-none group"
+                  >
+                    <span className={cn(
+                      "font-semibold text-base sm:text-lg pr-8 transition-colors duration-300",
+                      isOpen ? "text-gray-900" : "text-gray-700 group-hover:text-gray-900"
+                    )}>
+                      {item.question}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-5 w-5 text-gray-400 transition-transform duration-300 ease-in-out flex-shrink-0",
+                        isOpen && "rotate-180"
+                      )}
+                      style={isOpen ? { color: primaryColor } : undefined}
+                    />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                      >
+                        <div className="px-6 pb-6 pt-0 text-gray-600 leading-relaxed text-base border-t border-dashed border-gray-100 mt-[-4px] pt-4">
+                          {item.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* FAQ CTA */}
+          <div className="mt-14 text-center">
+            <p className="text-gray-500 text-sm mb-4 font-medium">Não encontrou o que procurava?</p>
+            <Button
+              onClick={() => openStoreWhatsApp(store.name, store.whatsapp)}
+              className="rounded-full pl-6 pr-8 h-12 shadow-lg hover:shadow-green-200/50 hover:-translate-y-0.5 transition-all text-white font-semibold group"
+              style={{ backgroundColor: '#25D366' }}
+            >
+              <MessageCircle className="h-5 w-5 mr-3 fill-current group-hover:scale-110 transition-transform" />
+              Falar com um especialista
+            </Button>
           </div>
         </div>
       </div>

@@ -82,25 +82,28 @@ export function DashboardOverview() {
       </div>
 
       {/* Stats */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <Package className="h-6 w-6 text-primary" />
+        <Link href="/dashboard/products" className="block h-full">
+          <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <Package className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {productCount}
+                    <span className="text-sm text-gray-400 font-normal ml-1">
+                      / {store?.maxProducts || 20}
+                    </span>
+                  </p>
+                  <p className="text-sm font-medium text-gray-500">Produtos</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {productCount}
-                  <span className="text-sm text-gray-400 font-normal ml-1">
-                    / {store?.maxProducts || 20}
-                  </span>
-                </p>
-                <p className="text-sm font-medium text-gray-500">Produtos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
         <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -114,72 +117,76 @@ export function DashboardOverview() {
             </div>
           </CardContent>
         </Card>
-        <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
-                  hasLogo ? "bg-purple-50" : "bg-gray-100"
-                )}
-              >
-                <Palette
+        <Link href="/dashboard/identity" className="block h-full">
+          <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div
                   className={cn(
-                    "h-6 w-6 transition-colors",
-                    hasLogo ? "text-purple-600" : "text-gray-400"
+                    "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
+                    hasLogo ? "bg-purple-50" : "bg-gray-100"
                   )}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Logo</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div
+                >
+                  <Palette
                     className={cn(
-                      "w-2 h-2 rounded-full",
-                      hasLogo ? "bg-purple-500" : "bg-gray-300"
+                      "h-6 w-6 transition-colors",
+                      hasLogo ? "text-purple-600" : "text-gray-400"
                     )}
                   />
-                  <p className="text-xs text-gray-500">
-                    {hasLogo ? "Configurado" : "Pendente"}
-                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Logo</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        hasLogo ? "bg-purple-500" : "bg-gray-300"
+                      )}
+                    />
+                    <p className="text-xs text-gray-500">
+                      {hasLogo ? "Configurado" : "Pendente"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
-                  hasBanner ? "bg-blue-50" : "bg-gray-100"
-                )}
-              >
-                <Settings
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/dashboard/identity" className="block h-full">
+          <Card className="rounded-xl border-gray-100 shadow-sm hover:shadow-md transition-shadow h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div
                   className={cn(
-                    "h-6 w-6 transition-colors",
-                    hasBanner ? "text-blue-600" : "text-gray-400"
+                    "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
+                    hasBanner ? "bg-blue-50" : "bg-gray-100"
                   )}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-900">Banner</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div
+                >
+                  <Settings
                     className={cn(
-                      "w-2 h-2 rounded-full",
-                      hasBanner ? "bg-blue-500" : "bg-gray-300"
+                      "h-6 w-6 transition-colors",
+                      hasBanner ? "text-blue-600" : "text-gray-400"
                     )}
                   />
-                  <p className="text-xs text-gray-500">
-                    {hasBanner ? "Configurado" : "Pendente"}
-                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Banner</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        hasBanner ? "bg-blue-500" : "bg-gray-300"
+                      )}
+                    />
+                    <p className="text-xs text-gray-500">
+                      {hasBanner ? "Configurado" : "Pendente"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Quick Actions */}
@@ -219,7 +226,7 @@ export function DashboardOverview() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-gray-900 group-hover:text-purple-600 transition-colors">
               <Palette className="h-5 w-5 text-purple-600" />
-              Identidade Visual
+              Aparência
             </CardTitle>
           </CardHeader>
           <CardContent>

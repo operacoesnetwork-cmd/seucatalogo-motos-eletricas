@@ -19,12 +19,14 @@ import {
   Search,
   Filter,
   GripVertical,
+  Info,
 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -74,11 +76,11 @@ function SortableProductItem({ product, onToggleActive, onDelete }: SortableProd
   return (
     <div ref={setNodeRef} style={style}>
       <Card className="overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Drag Handle */}
             <button
-              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 shrink-0"
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 shrink-0 touch-none py-2"
               {...attributes}
               {...listeners}
             >
@@ -99,16 +101,16 @@ function SortableProductItem({ product, onToggleActive, onDelete }: SortableProd
             </div>
 
             {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-2 mb-1">
-                <h3 className="font-medium text-gray-900 truncate">
+            <div className="flex-1 min-w-0 flex flex-col gap-1 pr-2">
+              <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-2 sm:mb-1">
+                <h3 className="font-medium text-gray-900 text-sm sm:text-base leading-tight line-clamp-2 sm:truncate w-full">
                   {product?.name ?? 'Sem nome'}
                 </h3>
-                <Badge variant={product?.category as any ?? 'default'} className="shrink-0">
+                <Badge variant={product?.category as any ?? 'default'} className="hidden sm:inline-flex shrink-0 text-xs h-6 px-2">
                   {CATEGORY_LABELS[product?.category as ProductCategory] ?? product?.category ?? ''}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">
                 {product?.showPrice
                   ? formatPrice(product?.discountPrice ?? product?.basePrice)
                   : "Sob consulta"}
@@ -151,7 +153,17 @@ export function ProductsList() {
   const [isSaving, setIsSaving] = React.useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -324,27 +336,36 @@ export function ProductsList() {
           </CardContent>
         </Card>
       ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={filteredProducts.map((p) => p?.id ?? '')}
-            strategy={verticalListSortingStrategy}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1 text-sm text-gray-500">
+            <Info className="h-4 w-4 text-blue-500" />
+            <p className="text-xs sm:text-sm">
+              Use o ícone <GripVertical className="h-3 w-3 inline mx-0.5" /> para arrastar e reordenar a vitrine.
+            </p>
+          </div>
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
           >
-            <div className="space-y-3">
-              {filteredProducts.map((product) => (
-                <SortableProductItem
-                  key={product?.id ?? ''}
-                  product={product}
-                  onToggleActive={handleToggleActive}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+            <SortableContext
+              items={filteredProducts.map((p) => p?.id ?? '')}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-3">
+                {filteredProducts.map((product) => (
+                  <SortableProductItem
+                    key={product?.id ?? ''}
+                    product={product}
+                    onToggleActive={handleToggleActive}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
       )}
     </div>
   );
