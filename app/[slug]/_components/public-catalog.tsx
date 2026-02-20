@@ -211,7 +211,25 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
     setSelectedProduct(product);
     setCurrentImageIndex(0);
     setIsAtBottom(false);
+    window.history.pushState({ modalOpen: true }, "");
   };
+
+  const handleManualClose = React.useCallback(() => {
+    setSelectedProduct(null);
+    if (window.history.state?.modalOpen) {
+      window.history.back();
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      if (selectedProduct) {
+        setSelectedProduct(null);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [selectedProduct]);
 
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
   const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
@@ -365,18 +383,24 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                               <Info className="h-5 w-5 text-gray-600" />
                             </Button>
 
-                            <Button
-                              size="sm"
-                              className="h-10 w-full rounded-full shadow-md hover:shadow-xl transition-all font-semibold active:scale-95 flex items-center justify-center gap-2 group/btn"
-                              style={{ backgroundColor: '#25D366', color: 'white' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openWhatsApp(product.name, store.whatsapp);
-                              }}
+                            <motion.div
+                              animate={{ scale: [1, 1.03, 1] }}
+                              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                              className="w-full"
                             >
-                              <MessageCircle className="h-4 w-4 fill-white/20" />
-                              <span>Tenho Interesse</span>
-                            </Button>
+                              <Button
+                                size="sm"
+                                className="h-10 w-full rounded-full shadow-md hover:shadow-xl transition-all font-semibold active:scale-95 flex items-center justify-center gap-2 group/btn"
+                                style={{ backgroundColor: '#25D366', color: 'white' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openWhatsApp(product.name, store.whatsapp);
+                                }}
+                              >
+                                <MessageCircle className="h-4 w-4 fill-white/20" />
+                                <span>Tenho Interesse</span>
+                              </Button>
+                            </motion.div>
                           </div>
                         </div>
                       </CardContent>
@@ -470,14 +494,20 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
           {/* FAQ CTA */}
           <div className="mt-14 text-center">
             <p className="text-gray-500 text-sm mb-4 font-medium">Não encontrou o que procurava?</p>
-            <Button
-              onClick={() => openStoreWhatsApp(store.name, store.whatsapp)}
-              className="rounded-full pl-6 pr-8 h-12 shadow-lg hover:shadow-green-200/50 hover:-translate-y-0.5 transition-all text-white font-semibold group"
-              style={{ backgroundColor: '#25D366' }}
+            <motion.div
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              className="inline-block"
             >
-              <MessageCircle className="h-5 w-5 mr-3 fill-current group-hover:scale-110 transition-transform" />
-              Falar com um especialista
-            </Button>
+              <Button
+                onClick={() => openStoreWhatsApp(store.name, store.whatsapp)}
+                className="rounded-full pl-6 pr-8 h-12 shadow-lg hover:shadow-green-200/50 hover:-translate-y-0.5 transition-all text-white font-semibold group"
+                style={{ backgroundColor: '#25D366' }}
+              >
+                <MessageCircle className="h-5 w-5 mr-3 fill-current group-hover:scale-110 transition-transform" />
+                Falar com um especialista
+              </Button>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -501,7 +531,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
       {/* Product Detail Modal */}
       <Modal
         isOpen={!!selectedProduct}
-        onClose={() => setSelectedProduct(null)}
+        onClose={handleManualClose}
         title=""
         className="max-w-5xl p-0 overflow-hidden bg-white gap-0 w-full h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] mx-0 sm:mx-4 rounded-none sm:rounded-2xl"
         contentClassName="p-0 h-full"
@@ -585,7 +615,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
             {/* Info Section */}
             <div className="w-full lg:w-2/5 flex flex-col h-full overflow-hidden bg-white relative">
               <div
-                className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar pb-32"
+                className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar pb-32 lg:pb-44"
                 onScroll={handleScroll}
               >
                 <div className="mb-4 mt-2">
@@ -668,14 +698,20 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                   ? "bg-white border-t border-gray-100"
                   : "bg-gradient-to-t from-white/80 to-transparent backdrop-blur-[2px] border-t border-transparent"
               )}>
-                <Button
-                  className="w-full h-12 sm:h-14 text-lg font-semibold shadow-xl transition-all active:scale-[0.98] rounded-xl sm:rounded-full"
-                  style={{ backgroundColor: '#25D366' }}
-                  onClick={() => openWhatsApp(selectedProduct.name, store.whatsapp)}
+                <motion.div
+                  animate={{ scale: [1, 1.02, 1] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                  className="w-full"
                 >
-                  <MessageCircle className="h-6 w-6 mr-2 fill-current" />
-                  Tenho Interesse
-                </Button>
+                  <Button
+                    className="w-full h-12 sm:h-14 text-lg font-semibold shadow-xl transition-all active:scale-[0.98] rounded-xl sm:rounded-full"
+                    style={{ backgroundColor: '#25D366' }}
+                    onClick={() => openWhatsApp(selectedProduct.name, store.whatsapp)}
+                  >
+                    <MessageCircle className="h-6 w-6 mr-2 fill-current" />
+                    Tenho Interesse
+                  </Button>
+                </motion.div>
               </div>
             </div>
           </div>
