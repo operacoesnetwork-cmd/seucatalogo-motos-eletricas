@@ -10,10 +10,11 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  contentClassName?: string;
   title?: string;
 }
 
-export function Modal({ isOpen, onClose, children, className, title }: ModalProps) {
+export function Modal({ isOpen, onClose, children, className, contentClassName, title }: ModalProps) {
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose?.();
@@ -70,7 +71,7 @@ export function Modal({ isOpen, onClose, children, className, title }: ModalProp
                 <X className="h-5 w-5 text-gray-500" />
               </button>
             )}
-            <div className={cn(!title && "pt-4", "p-4")}>{children}</div>
+            <div className={cn(!title && "pt-4", "p-4", contentClassName)}>{children}</div>
           </motion.div>
         </div>
       )}

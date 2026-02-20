@@ -187,6 +187,13 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const [expandedFaq, setExpandedFaq] = React.useState<number | null>(null);
+  const [isAtBottom, setIsAtBottom] = React.useState(false);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const atBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 40;
+    setIsAtBottom(atBottom);
+  };
 
   const primaryColor = store.primaryColor || '#7c3aed';
   // Use a lighter version of the background or white if the store bg is too dark/specific, 
@@ -203,6 +210,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
   const openProductModal = (product: Product) => {
     setSelectedProduct(product);
     setCurrentImageIndex(0);
+    setIsAtBottom(false);
   };
 
   const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -495,12 +503,25 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
         title=""
-        className="max-w-5xl p-0 overflow-hidden bg-white gap-0"
+        className="max-w-5xl p-0 overflow-hidden bg-white gap-0 w-full h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] mx-0 sm:mx-4 rounded-none sm:rounded-2xl"
+        contentClassName="p-0 h-full"
       >
         {selectedProduct && (
-          <div className="flex flex-col lg:flex-row h-full max-h-[90vh] lg:h-[600px]">
+          <div className="flex flex-col lg:flex-row h-full lg:h-[600px]">
             {/* Gallery Section */}
-            <div className="w-full lg:w-3/5 aspect-square lg:aspect-auto bg-gray-100 relative group flex items-center justify-center overflow-hidden shrink-0">
+            <div className="w-full lg:w-3/5 aspect-[4/3] lg:aspect-auto bg-gray-100 relative group flex items-center justify-center overflow-hidden shrink-0">
+              {/* Overlay Badges */}
+              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 pointer-events-none">
+                <div className="flex items-center gap-2">
+                  <Badge variant={selectedProduct.category as any} className="px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider bg-white/90 backdrop-blur-md text-gray-800 shadow-sm border border-white/20">
+                    {CATEGORY_LABELS[selectedProduct.category as ProductCategory] ?? selectedProduct.category}
+                  </Badge>
+                  {selectedProduct.hasDiscount && selectedProduct.discountPrice && (
+                    <Badge variant="destructive" className="bg-red-500 shadow-sm text-white">Oferta</Badge>
+                  )}
+                </div>
+              </div>
+
               <div className="relative w-full h-full">
                 <AnimatePresence initial={false} mode="wait">
                   {allImages[currentImageIndex] && (
@@ -562,18 +583,12 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
             </div>
 
             {/* Info Section */}
-            <div className="w-full lg:w-2/5 flex flex-col h-full overflow-y-auto bg-white custom-scrollbar">
-              <div className="p-6 lg:p-8 flex-1">
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant={selectedProduct.category as any} className="px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider">
-                      {CATEGORY_LABELS[selectedProduct.category as ProductCategory] ?? selectedProduct.category}
-                    </Badge>
-                    {selectedProduct.hasDiscount && selectedProduct.discountPrice && (
-                      <Badge variant="destructive" className="bg-red-500 text-white">Promoção</Badge>
-                    )}
-                  </div>
-
+            <div className="w-full lg:w-2/5 flex flex-col h-full overflow-hidden bg-white relative">
+              <div
+                className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar pb-32"
+                onScroll={handleScroll}
+              >
+                <div className="mb-4 mt-2">
                   <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-4">
                     {selectedProduct.name}
                   </h2>
@@ -644,20 +659,23 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                   )}
                 </div>
 
-                {/* Footer / CTA */}
-                <div className="sticky bottom-0 bg-white p-6 border-t border-gray-100 mt-auto">
-                  <Button
-                    className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
-                    style={{ backgroundColor: '#25D366' }} // Always green for WhatsApp
-                    onClick={() => openWhatsApp(selectedProduct.name, store.whatsapp)}
-                  >
-                    <MessageCircle className="h-5 w-5 mr-2 fill-current" />
-                    Tenho Interesse
-                  </Button>
-                  <p className="text-center text-xs text-gray-400 mt-3">
-                    Clicando acima você inicia uma conversa direto com o vendedor.
-                  </p>
-                </div>
+              </div>
+
+              {/* Fixed Bottom CTA with dynamic background */}
+              <div className={cn(
+                "absolute bottom-0 left-0 right-0 p-4 lg:p-6 shrink-0 transition-all duration-300 z-30 pb-6 lg:pb-6",
+                isAtBottom
+                  ? "bg-white border-t border-gray-100"
+                  : "bg-gradient-to-t from-white/80 to-transparent backdrop-blur-[2px] border-t border-transparent"
+              )}>
+                <Button
+                  className="w-full h-12 sm:h-14 text-lg font-semibold shadow-xl transition-all active:scale-[0.98] rounded-xl sm:rounded-full"
+                  style={{ backgroundColor: '#25D366' }}
+                  onClick={() => openWhatsApp(selectedProduct.name, store.whatsapp)}
+                >
+                  <MessageCircle className="h-6 w-6 mr-2 fill-current" />
+                  Tenho Interesse
+                </Button>
               </div>
             </div>
           </div>
@@ -666,4 +684,3 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
     </div>
   );
 }
-
