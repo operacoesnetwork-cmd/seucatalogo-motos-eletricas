@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   AlertTriangle,
+  LineChart,
 } from "lucide-react";
 import { ShareButton } from "@/components/ui/share-button";
 
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/dashboard/identity", label: "Aparência", icon: Palette },
   { href: "/dashboard/settings", label: "Configurações", icon: Settings },
   { href: "/dashboard/products", label: "Produtos", icon: Package },
+  { href: "/dashboard/advanced", label: "Avançado", icon: LineChart },
 ];
 
 interface StoreStatus {

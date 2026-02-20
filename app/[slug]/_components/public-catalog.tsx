@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { ShareButton } from "@/components/ui/share-button";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
 
 // --- Types ---
 
@@ -68,6 +69,8 @@ interface Store {
   instagram: string | null;
   city: string | null;
   state: string | null;
+  metaPixelId?: string | null;
+  googleAdsId?: string | null;
   products: Product[];
 }
 
@@ -79,6 +82,25 @@ interface PublicCatalogProps {
 
 function StoreHeader({ store }: { store: Store }) {
   const primaryColor = store.primaryColor || '#7c3aed';
+
+  const handleStoreWhatsApp = (storeName: string, phone: string) => {
+    try {
+      if (typeof window !== "undefined") {
+        if (store.metaPixelId && (window as any).fbq) {
+          (window as any).fbq('track', 'Contact');
+        }
+        if (store.googleAdsId && (window as any).gtag) {
+          (window as any).gtag('event', 'generate_lead', {
+            event_category: 'engagement',
+            event_label: 'WhatsApp Store General'
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Tracking error:", e);
+    }
+    openStoreWhatsApp(storeName, phone);
+  };
 
   return (
     <div className="relative overflow-hidden bg-gray-900 pb-20">
@@ -159,7 +181,7 @@ function StoreHeader({ store }: { store: Store }) {
             <Button
               className="w-full shadow-lg hover:shadow-xl transition-all font-semibold"
               style={{ backgroundColor: '#25D366', color: 'white' }}
-              onClick={() => openStoreWhatsApp(store.name, store.whatsapp)}
+              onClick={() => handleStoreWhatsApp(store.name, store.whatsapp)}
             >
               <MessageCircle className="h-5 w-5 mr-2" />
               Falar no WhatsApp
@@ -212,6 +234,37 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
     setCurrentImageIndex(0);
     setIsAtBottom(false);
     window.history.pushState({ modalOpen: true }, "");
+
+    // Tracking: ViewContent / view_item
+    try {
+      if (typeof window !== "undefined") {
+        const itemData = {
+          content_name: product.name,
+          content_category: product.category,
+          currency: "BRL",
+          value: product.discountPrice || product.basePrice || 0,
+        };
+        // Meta Pixel
+        if (store.metaPixelId && (window as any).fbq) {
+          (window as any).fbq('track', 'ViewContent', itemData);
+        }
+        // Google Ads
+        if (store.googleAdsId && (window as any).gtag) {
+          (window as any).gtag('event', 'view_item', {
+            items: [
+              {
+                id: product.id,
+                name: product.name,
+                category: product.category,
+                price: product.discountPrice || product.basePrice || 0,
+              }
+            ]
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Tracking error:", e);
+    }
   };
 
   const handleManualClose = React.useCallback(() => {
@@ -220,6 +273,51 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
       window.history.back();
     }
   }, []);
+
+  const handleWhatsApp = (productName: string, phone: string) => {
+    try {
+      if (typeof window !== "undefined") {
+        const itemData = {
+          content_name: productName,
+          currency: "BRL",
+        };
+        // Meta Pixel
+        if (store.metaPixelId && (window as any).fbq) {
+          (window as any).fbq('track', 'Lead', itemData);
+        }
+        // Google Ads
+        if (store.googleAdsId && (window as any).gtag) {
+          (window as any).gtag('event', 'generate_lead', {
+            event_category: 'engagement',
+            event_label: 'WhatsApp Click',
+            event_action: productName
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Tracking error:", e);
+    }
+    openWhatsApp(productName, phone);
+  };
+
+  const handleStoreWhatsApp = (storeName: string, phone: string) => {
+    try {
+      if (typeof window !== "undefined") {
+        if (store.metaPixelId && (window as any).fbq) {
+          (window as any).fbq('track', 'Contact');
+        }
+        if (store.googleAdsId && (window as any).gtag) {
+          (window as any).gtag('event', 'generate_lead', {
+            event_category: 'engagement',
+            event_label: 'WhatsApp Store General'
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Tracking error:", e);
+    }
+    openStoreWhatsApp(storeName, phone);
+  };
 
   React.useEffect(() => {
     const handlePopState = () => {
@@ -240,483 +338,520 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: appBgColor }}>
-      <StoreHeader store={store} />
+    <>
+      {/* Tracking Scripts */}
+      {store.metaPixelId && (
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${store.metaPixelId}');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+      )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 max-w-7xl mx-auto w-full px-4 -mt-8 relative z-20 pb-8">
+      {store.googleAdsId && (
+        <>
+          <Script
+            strategy="afterInteractive"
+            src={`https://www.googletagmanager.com/gtag/js?id=${store.googleAdsId}`}
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${store.googleAdsId}');
+            `}
+          </Script>
+        </>
+      )}
 
-        {/* Products Grid */}
-        {store.products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-              <Zap className="h-10 w-10 text-gray-300" />
+      <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: appBgColor }}>
+        <StoreHeader store={store} />
+
+        {/* Main Content Area */}
+        <div className="flex-1 max-w-7xl mx-auto w-full px-4 -mt-8 relative z-20 pb-8">
+
+          {/* Products Grid */}
+          {store.products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <Zap className="h-10 w-10 text-gray-300" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum veículo disponível</h3>
+              <p className="text-gray-500 max-w-xs mx-auto">Esta loja ainda não cadastrou produtos.</p>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum veículo disponível</h3>
-            <p className="text-gray-500 max-w-xs mx-auto">Esta loja ainda não cadastrou produtos.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <AnimatePresence>
-              {store.products.map((product, index) => {
-                const colors = safeColors(product.availableColors);
-                const hasDiscount = product.hasDiscount && product.discountPrice;
-                const displayPrice = hasDiscount ? product.discountPrice : product.basePrice;
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <AnimatePresence>
+                {store.products.map((product, index) => {
+                  const colors = safeColors(product.availableColors);
+                  const hasDiscount = product.hasDiscount && product.discountPrice;
+                  const displayPrice = hasDiscount ? product.discountPrice : product.basePrice;
 
-                return (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Card
-                      className="group h-full flex flex-col overflow-hidden border-transparent shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer rounded-2xl ring-1 ring-gray-100"
-                      onClick={() => openProductModal(product)}
-                      style={{ '--store-primary': primaryColor } as React.CSSProperties}
+                  return (
+                    <motion.div
+                      key={product.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      {/* Image Area */}
-                      <div className="aspect-[4/3] relative bg-gray-100 overflow-hidden group-hover:opacity-100">
-                        {product.mainImageUrl ? (
-                          <Image
-                            src={product.mainImageUrl}
-                            alt={product.name}
-                            fill
-                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-gray-300">
-                            <Zap className="h-12 w-12" />
-                          </div>
-                        )}
-
-                        <div className="absolute top-3 left-3 flex flex-col gap-2">
-                          {product.category && (
-                            <Badge className="bg-white/90 text-gray-800 backdrop-blur-sm shadow-sm hover:bg-white">
-                              {CATEGORY_LABELS[product.category as ProductCategory] ?? product.category}
-                            </Badge>
-                          )}
-                          {hasDiscount && (
-                            <Badge variant="destructive" className="shadow-sm">
-                              Oferta
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Content Area */}
-                      <CardContent className="p-4 flex-1 flex flex-col">
-                        <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-[var(--store-primary)] transition-colors line-clamp-2">
-                          {product.name}
-                        </h3>
-
-                        {/* Specs Mini Summary */}
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3 mt-1">
-                          {product.motorPower && (
-                            <div className="flex items-center gap-1" title="Potência">
-                              <Zap className="h-3 w-3" /> {product.motorPower}
+                      <Card
+                        className="group h-full flex flex-col overflow-hidden border-transparent shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer rounded-2xl ring-1 ring-gray-100"
+                        onClick={() => openProductModal(product)}
+                        style={{ '--store-primary': primaryColor } as React.CSSProperties}
+                      >
+                        {/* Image Area */}
+                        <div className="aspect-[4/3] relative bg-gray-100 overflow-hidden group-hover:opacity-100">
+                          {product.mainImageUrl ? (
+                            <Image
+                              src={product.mainImageUrl}
+                              alt={product.name}
+                              fill
+                              className="object-cover transition-transform duration-500 group-hover:scale-110"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full text-gray-300">
+                              <Zap className="h-12 w-12" />
                             </div>
                           )}
-                          {product.maxSpeed && (
-                            <div className="flex items-center gap-1" title="Velocidade Máxima">
-                              <Gauge className="h-3 w-3" /> {product.maxSpeed}
-                            </div>
-                          )}
-                          {product.autonomy && (
-                            <div className="flex items-center gap-1" title="Autonomia">
-                              <Battery className="h-3 w-3" /> {product.autonomy}
-                            </div>
-                          )}
-                        </div>
 
-                        {/* Colors Preview */}
-                        {colors.length > 0 && (
-                          <div className="flex items-center gap-1 mb-3">
-                            {colors.slice(0, 4).map((c, i) => (
-                              <div
-                                key={i}
-                                className="w-3.5 h-3.5 rounded-full border border-gray-200 ring-1 ring-transparent group-hover:ring-gray-300 transition-all"
-                                style={{ backgroundColor: c.value }}
-                                title={c.name}
-                              />
-                            ))}
-                            {colors.length > 4 && (
-                              <span className="text-[10px] text-gray-400">+{colors.length - 4}</span>
+                          <div className="absolute top-3 left-3 flex flex-col gap-2">
+                            {product.category && (
+                              <Badge className="bg-white/90 text-gray-800 backdrop-blur-sm shadow-sm hover:bg-white">
+                                {CATEGORY_LABELS[product.category as ProductCategory] ?? product.category}
+                              </Badge>
+                            )}
+                            {hasDiscount && (
+                              <Badge variant="destructive" className="shadow-sm">
+                                Oferta
+                              </Badge>
                             )}
                           </div>
-                        )}
+                        </div>
 
-                        <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-2">
-                          <div className="flex items-end justify-between">
-                            <div className="flex flex-col">
-                              {product.showPrice ? (
-                                <>
-                                  {hasDiscount && (
-                                    <span className="text-xs text-gray-400 line-through mb-0.5">
-                                      {formatPrice(product.basePrice)}
-                                    </span>
-                                  )}
-                                  <span className="text-lg font-bold" style={{ color: primaryColor }}>
-                                    {formatPrice(displayPrice)}
-                                  </span>
-                                </>
-                              ) : (
-                                <span className="text-sm font-medium text-gray-500">Consulte valor</span>
+                        {/* Content Area */}
+                        <CardContent className="p-4 flex-1 flex flex-col">
+                          <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-[var(--store-primary)] transition-colors line-clamp-2">
+                            {product.name}
+                          </h3>
+
+                          {/* Specs Mini Summary */}
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-3 mt-1">
+                            {product.motorPower && (
+                              <div className="flex items-center gap-1" title="Potência">
+                                <Zap className="h-3 w-3" /> {product.motorPower}
+                              </div>
+                            )}
+                            {product.maxSpeed && (
+                              <div className="flex items-center gap-1" title="Velocidade Máxima">
+                                <Gauge className="h-3 w-3" /> {product.maxSpeed}
+                              </div>
+                            )}
+                            {product.autonomy && (
+                              <div className="flex items-center gap-1" title="Autonomia">
+                                <Battery className="h-3 w-3" /> {product.autonomy}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Colors Preview */}
+                          {colors.length > 0 && (
+                            <div className="flex items-center gap-1 mb-3">
+                              {colors.slice(0, 4).map((c, i) => (
+                                <div
+                                  key={i}
+                                  className="w-3.5 h-3.5 rounded-full border border-gray-200 ring-1 ring-transparent group-hover:ring-gray-300 transition-all"
+                                  style={{ backgroundColor: c.value }}
+                                  title={c.name}
+                                />
+                              ))}
+                              {colors.length > 4 && (
+                                <span className="text-[10px] text-gray-400">+{colors.length - 4}</span>
                               )}
                             </div>
-                          </div>
+                          )}
 
-                          <div className="grid grid-cols-[auto_1fr] gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-10 w-10 p-0 rounded-full border-gray-200 hover:bg-gray-50 hover:text-primary transition-colors shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openProductModal(product);
-                              }}
-                              title="Mais detalhes"
-                            >
-                              <Info className="h-5 w-5 text-gray-600" />
-                            </Button>
+                          <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col gap-2">
+                            <div className="flex items-end justify-between">
+                              <div className="flex flex-col">
+                                {product.showPrice ? (
+                                  <>
+                                    {hasDiscount && (
+                                      <span className="text-xs text-gray-400 line-through mb-0.5">
+                                        {formatPrice(product.basePrice)}
+                                      </span>
+                                    )}
+                                    <span className="text-lg font-bold" style={{ color: primaryColor }}>
+                                      {formatPrice(displayPrice)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-sm font-medium text-gray-500">Consulte valor</span>
+                                )}
+                              </div>
+                            </div>
 
-                            <motion.div
-                              animate={{ scale: [1, 1.03, 1] }}
-                              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                              className="w-full"
-                            >
+                            <div className="grid grid-cols-[auto_1fr] gap-2">
                               <Button
                                 size="sm"
-                                className="h-10 w-full rounded-full shadow-md hover:shadow-xl transition-all font-semibold active:scale-95 flex items-center justify-center gap-2 group/btn"
-                                style={{ backgroundColor: '#25D366', color: 'white' }}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-full border-gray-200 hover:bg-gray-50 hover:text-primary transition-colors shrink-0"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openWhatsApp(product.name, store.whatsapp);
+                                  openProductModal(product);
                                 }}
+                                title="Mais detalhes"
                               >
-                                <MessageCircle className="h-4 w-4 fill-white/20" />
-                                <span>Tenho Interesse</span>
+                                <Info className="h-5 w-5 text-gray-600" />
                               </Button>
-                            </motion.div>
+
+                              <motion.div
+                                animate={{ scale: [1, 1.03, 1] }}
+                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                                className="w-full"
+                              >
+                                <Button
+                                  size="sm"
+                                  className="h-10 w-full rounded-full shadow-md hover:shadow-xl transition-all font-semibold active:scale-95 flex items-center justify-center gap-2 group/btn"
+                                  style={{ backgroundColor: '#25D366', color: 'white' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleWhatsApp(product.name, store.whatsapp);
+                                  }}
+                                >
+                                  <MessageCircle className="h-4 w-4 fill-white/20" />
+                                  <span>Tenho Interesse</span>
+                                </Button>
+                              </motion.div>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        {/* FAQ Section */}
+        <div className="bg-gradient-to-b from-white to-gray-50 py-12 relative overflow-hidden">
+          {/* Decorative top line */}
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+
+          <div className="max-w-3xl mx-auto px-4 relative z-10">
+            <div className="text-center mb-12">
+              <div
+                className="inline-flex items-center justify-center p-3 rounded-2xl mb-5 shadow-sm ring-1 ring-black/5"
+                style={{
+                  backgroundColor: `${primaryColor}15`, // 15 = ~8% opacity hex equivalent
+                  color: primaryColor
+                }}
+              >
+                <Info className="h-6 w-6" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+                Ficou com alguma dúvida?
+              </h2>
+              <p className="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
+                Confira as respostas para as perguntas mais comuns sobre nossos veículos elétricos.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {FAQ_ITEMS.map((item, index) => {
+                const isOpen = expandedFaq === index;
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className={cn(
+                      "bg-white rounded-2xl overflow-hidden transition-all duration-300",
+                      isOpen
+                        ? "shadow-lg ring-1 ring-black/5"
+                        : "shadow-sm hover:shadow-md border border-gray-100 hover:border-gray-200"
+                    )}
+                  >
+                    <button
+                      onClick={() => setExpandedFaq(isOpen ? null : index)}
+                      className="w-full flex items-center justify-between p-6 text-left focus:outline-none group"
+                    >
+                      <span className={cn(
+                        "font-semibold text-base sm:text-lg pr-8 transition-colors duration-300",
+                        isOpen ? "text-gray-900" : "text-gray-700 group-hover:text-gray-900"
+                      )}>
+                        {item.question}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "h-5 w-5 text-gray-400 transition-transform duration-300 ease-in-out flex-shrink-0",
+                          isOpen && "rotate-180"
+                        )}
+                        style={isOpen ? { color: primaryColor } : undefined}
+                      />
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        >
+                          <div className="px-6 pb-6 pt-0 text-gray-600 leading-relaxed text-base border-t border-dashed border-gray-100 mt-[-4px] pt-4">
+                            {item.answer}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 );
               })}
-            </AnimatePresence>
-          </div>
-        )}
-      </div>
-
-      {/* FAQ Section */}
-      <div className="bg-gradient-to-b from-white to-gray-50 py-12 relative overflow-hidden">
-        {/* Decorative top line */}
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-
-        <div className="max-w-3xl mx-auto px-4 relative z-10">
-          <div className="text-center mb-12">
-            <div
-              className="inline-flex items-center justify-center p-3 rounded-2xl mb-5 shadow-sm ring-1 ring-black/5"
-              style={{
-                backgroundColor: `${primaryColor}15`, // 15 = ~8% opacity hex equivalent
-                color: primaryColor
-              }}
-            >
-              <Info className="h-6 w-6" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-              Ficou com alguma dúvida?
-            </h2>
-            <p className="text-lg text-gray-500 max-w-xl mx-auto leading-relaxed">
-              Confira as respostas para as perguntas mais comuns sobre nossos veículos elétricos.
+
+            {/* FAQ CTA */}
+            <div className="mt-14 text-center">
+              <p className="text-gray-500 text-sm mb-4 font-medium">Não encontrou o que procurava?</p>
+              <motion.div
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="inline-block"
+              >
+                <Button
+                  onClick={() => handleStoreWhatsApp(store.name, store.whatsapp)}
+                  className="rounded-full pl-6 pr-8 h-12 shadow-lg hover:shadow-green-200/50 hover:-translate-y-0.5 transition-all text-white font-semibold group"
+                  style={{ backgroundColor: '#25D366' }}
+                >
+                  <MessageCircle className="h-5 w-5 mr-3 fill-current group-hover:scale-110 transition-transform" />
+                  Falar com um especialista
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modern Footer */}
+        <footer className="bg-[#160b25] text-white py-12 border-t border-[#2a1740]">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center backdrop-blur-sm">
+                <Zap className="h-5 w-5 text-white/50 fill-white/50" />
+              </div>
+              <span className="font-bold text-lg tracking-tight text-white/50">EletroMoto</span>
+            </div>
+
+            <p className="text-gray-600 text-sm">
+              © {new Date().getFullYear()} Desenvolvido por <a href="/" className="font-medium hover:text-gray-400 transition-colors">NTEC</a>.
             </p>
           </div>
+        </footer>
 
-          <div className="space-y-4">
-            {FAQ_ITEMS.map((item, index) => {
-              const isOpen = expandedFaq === index;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className={cn(
-                    "bg-white rounded-2xl overflow-hidden transition-all duration-300",
-                    isOpen
-                      ? "shadow-lg ring-1 ring-black/5"
-                      : "shadow-sm hover:shadow-md border border-gray-100 hover:border-gray-200"
-                  )}
-                >
-                  <button
-                    onClick={() => setExpandedFaq(isOpen ? null : index)}
-                    className="w-full flex items-center justify-between p-6 text-left focus:outline-none group"
-                  >
-                    <span className={cn(
-                      "font-semibold text-base sm:text-lg pr-8 transition-colors duration-300",
-                      isOpen ? "text-gray-900" : "text-gray-700 group-hover:text-gray-900"
-                    )}>
-                      {item.question}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        "h-5 w-5 text-gray-400 transition-transform duration-300 ease-in-out flex-shrink-0",
-                        isOpen && "rotate-180"
-                      )}
-                      style={isOpen ? { color: primaryColor } : undefined}
-                    />
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
+        {/* Product Detail Modal */}
+        <Modal
+          isOpen={!!selectedProduct}
+          onClose={handleManualClose}
+          title=""
+          className="max-w-5xl p-0 overflow-hidden bg-white gap-0 w-full h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] mx-0 sm:mx-4 rounded-none sm:rounded-2xl"
+          contentClassName="p-0 h-full"
+        >
+          {selectedProduct && (
+            <div className="flex flex-col lg:flex-row h-full lg:h-[600px]">
+              {/* Gallery Section */}
+              <div className="w-full lg:w-3/5 aspect-[4/3] lg:aspect-auto bg-gray-100 relative group flex items-center justify-center overflow-hidden shrink-0">
+                {/* Overlay Badges */}
+                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 pointer-events-none">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={selectedProduct.category as any} className="px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider bg-white/90 backdrop-blur-md text-gray-800 shadow-sm border border-white/20">
+                      {CATEGORY_LABELS[selectedProduct.category as ProductCategory] ?? selectedProduct.category}
+                    </Badge>
+                    {selectedProduct.hasDiscount && selectedProduct.discountPrice && (
+                      <Badge variant="destructive" className="bg-red-500 shadow-sm text-white">Oferta</Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="relative w-full h-full">
+                  <AnimatePresence initial={false} mode="wait">
+                    {allImages[currentImageIndex] && (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        key={currentImageIndex}
+                        className="relative w-full h-full"
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={1}
+                        onDragEnd={(e, { offset, velocity }) => {
+                          const swipe = Math.abs(offset.x) * velocity.x;
+                          if (swipe < -10000 || offset.x < -100) {
+                            nextImage();
+                          } else if (swipe > 10000 || offset.x > 100) {
+                            prevImage();
+                          }
+                        }}
                       >
-                        <div className="px-6 pb-6 pt-0 text-gray-600 leading-relaxed text-base border-t border-dashed border-gray-100 mt-[-4px] pt-4">
-                          {item.answer}
-                        </div>
+                        <Image
+                          src={allImages[currentImageIndex]}
+                          alt={selectedProduct.name}
+                          fill
+                          className="object-cover"
+                          priority
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* FAQ CTA */}
-          <div className="mt-14 text-center">
-            <p className="text-gray-500 text-sm mb-4 font-medium">Não encontrou o que procurava?</p>
-            <motion.div
-              animate={{ scale: [1, 1.03, 1] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="inline-block"
-            >
-              <Button
-                onClick={() => openStoreWhatsApp(store.name, store.whatsapp)}
-                className="rounded-full pl-6 pr-8 h-12 shadow-lg hover:shadow-green-200/50 hover:-translate-y-0.5 transition-all text-white font-semibold group"
-                style={{ backgroundColor: '#25D366' }}
-              >
-                <MessageCircle className="h-5 w-5 mr-3 fill-current group-hover:scale-110 transition-transform" />
-                Falar com um especialista
-              </Button>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Modern Footer */}
-      <footer className="bg-[#160b25] text-white py-12 border-t border-[#2a1740]">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center backdrop-blur-sm">
-              <Zap className="h-5 w-5 text-white/50 fill-white/50" />
-            </div>
-            <span className="font-bold text-lg tracking-tight text-white/50">EletroMoto</span>
-          </div>
-
-          <p className="text-gray-600 text-sm">
-            © {new Date().getFullYear()} Desenvolvido por <a href="/" className="font-medium hover:text-gray-400 transition-colors">NTEC</a>.
-          </p>
-        </div>
-      </footer>
-
-      {/* Product Detail Modal */}
-      <Modal
-        isOpen={!!selectedProduct}
-        onClose={handleManualClose}
-        title=""
-        className="max-w-5xl p-0 overflow-hidden bg-white gap-0 w-full h-[100dvh] max-h-[100dvh] sm:h-auto sm:max-h-[90vh] mx-0 sm:mx-4 rounded-none sm:rounded-2xl"
-        contentClassName="p-0 h-full"
-      >
-        {selectedProduct && (
-          <div className="flex flex-col lg:flex-row h-full lg:h-[600px]">
-            {/* Gallery Section */}
-            <div className="w-full lg:w-3/5 aspect-[4/3] lg:aspect-auto bg-gray-100 relative group flex items-center justify-center overflow-hidden shrink-0">
-              {/* Overlay Badges */}
-              <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 pointer-events-none">
-                <div className="flex items-center gap-2">
-                  <Badge variant={selectedProduct.category as any} className="px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider bg-white/90 backdrop-blur-md text-gray-800 shadow-sm border border-white/20">
-                    {CATEGORY_LABELS[selectedProduct.category as ProductCategory] ?? selectedProduct.category}
-                  </Badge>
-                  {selectedProduct.hasDiscount && selectedProduct.discountPrice && (
-                    <Badge variant="destructive" className="bg-red-500 shadow-sm text-white">Oferta</Badge>
-                  )}
                 </div>
+
+                {/* Navigation Buttons */}
+                {allImages.length > 1 && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-4 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0">
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-4 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0">
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/10 backdrop-blur-md rounded-full z-10">
+                      {allImages.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCurrentImageIndex(idx)}
+                          className={cn(
+                            "w-2.5 h-2.5 rounded-full transition-all",
+                            idx === currentImageIndex ? "bg-white scale-110" : "bg-white/40 hover:bg-white/60"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="relative w-full h-full">
-                <AnimatePresence initial={false} mode="wait">
-                  {allImages[currentImageIndex] && (
-                    <motion.div
-                      key={currentImageIndex}
-                      className="relative w-full h-full"
-                      initial={{ opacity: 0, x: 100 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -100 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      drag="x"
-                      dragConstraints={{ left: 0, right: 0 }}
-                      dragElastic={1}
-                      onDragEnd={(e, { offset, velocity }) => {
-                        const swipe = Math.abs(offset.x) * velocity.x;
-                        if (swipe < -10000 || offset.x < -100) {
-                          nextImage();
-                        } else if (swipe > 10000 || offset.x > 100) {
-                          prevImage();
-                        }
-                      }}
-                    >
-                      <Image
-                        src={allImages[currentImageIndex]}
-                        alt={selectedProduct.name}
-                        fill
-                        className="object-cover"
-                        priority
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              {/* Info Section */}
+              <div className="w-full lg:w-2/5 flex flex-col h-full overflow-hidden bg-white relative">
+                <div
+                  className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar pb-32 lg:pb-44"
+                  onScroll={handleScroll}
+                >
+                  <div className="mb-4 mt-2">
+                    <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-4">
+                      {selectedProduct.name}
+                    </h2>
 
-              {/* Navigation Buttons */}
-              {allImages.length > 1 && (
-                <>
-                  <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-4 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0">
-                    <ChevronLeft className="h-6 w-6" />
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-4 z-10 p-2 rounded-full bg-white/80 hover:bg-white shadow-lg text-gray-800 transition-all opacity-0 group-hover:opacity-100 translate-x-[10px] group-hover:translate-x-0">
-                    <ChevronRight className="h-6 w-6" />
-                  </button>
-
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/10 backdrop-blur-md rounded-full z-10">
-                    {allImages.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
-                        className={cn(
-                          "w-2.5 h-2.5 rounded-full transition-all",
-                          idx === currentImageIndex ? "bg-white scale-110" : "bg-white/40 hover:bg-white/60"
-                        )}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Info Section */}
-            <div className="w-full lg:w-2/5 flex flex-col h-full overflow-hidden bg-white relative">
-              <div
-                className="p-4 sm:p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar pb-32 lg:pb-44"
-                onScroll={handleScroll}
-              >
-                <div className="mb-4 mt-2">
-                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-4">
-                    {selectedProduct.name}
-                  </h2>
-
-                  {/* Price */}
-                  {selectedProduct.showPrice && (
-                    <div className="flex items-baseline gap-3 mb-6 pb-6 border-b border-gray-100">
-                      {selectedProduct.hasDiscount && selectedProduct.discountPrice ? (
-                        <>
+                    {/* Price */}
+                    {selectedProduct.showPrice && (
+                      <div className="flex items-baseline gap-3 mb-6 pb-6 border-b border-gray-100">
+                        {selectedProduct.hasDiscount && selectedProduct.discountPrice ? (
+                          <>
+                            <span className="text-3xl font-extrabold" style={{ color: primaryColor }}>
+                              {formatPrice(selectedProduct.discountPrice)}
+                            </span>
+                            <span className="text-lg text-gray-400 line-through">
+                              {formatPrice(selectedProduct.basePrice)}
+                            </span>
+                          </>
+                        ) : (
                           <span className="text-3xl font-extrabold" style={{ color: primaryColor }}>
-                            {formatPrice(selectedProduct.discountPrice)}
-                          </span>
-                          <span className="text-lg text-gray-400 line-through">
                             {formatPrice(selectedProduct.basePrice)}
                           </span>
-                        </>
-                      ) : (
-                        <span className="text-3xl font-extrabold" style={{ color: primaryColor }}>
-                          {formatPrice(selectedProduct.basePrice)}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Specs Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                    {[
-                      { icon: Zap, label: "Potência", value: selectedProduct.motorPower },
-                      { icon: Battery, label: "Autonomia", value: selectedProduct.autonomy },
-                      { icon: Gauge, label: "Velocidade", value: selectedProduct.maxSpeed },
-                      { icon: Clock, label: "Recarga", value: selectedProduct.chargeTime },
-                    ].filter(s => s.value).map((spec, i) => (
-                      <div key={i} className="bg-gray-50 rounded-xl p-3 flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5 text-gray-500 text-xs font-medium uppercase">
-                          <spec.icon className="h-3.5 w-3.5" />
-                          {spec.label}
-                        </div>
-                        <span className="text-sm font-semibold text-gray-900 truncate">
-                          {spec.value}
-                        </span>
+                        )}
                       </div>
-                    ))}
+                    )}
+
+                    {/* Specs Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-8">
+                      {[
+                        { icon: Zap, label: "Potência", value: selectedProduct.motorPower },
+                        { icon: Battery, label: "Autonomia", value: selectedProduct.autonomy },
+                        { icon: Gauge, label: "Velocidade", value: selectedProduct.maxSpeed },
+                        { icon: Clock, label: "Recarga", value: selectedProduct.chargeTime },
+                      ].filter(s => s.value).map((spec, i) => (
+                        <div key={i} className="bg-gray-50 rounded-xl p-3 flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-gray-500 text-xs font-medium uppercase">
+                            <spec.icon className="h-3.5 w-3.5" />
+                            {spec.label}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 truncate">
+                            {spec.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Description/Details */}
+                    {selectedProduct.technicalDetails && (
+                      <div className="mb-8">
+                        <h4 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Ficha Técnica</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                          {selectedProduct.technicalDetails}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Colors */}
+                    {safeColors(selectedProduct.availableColors).length > 0 && (
+                      <div className="mb-8">
+                        <h4 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Cores Disponíveis</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {safeColors(selectedProduct.availableColors).map((color, idx) => (
+                            <div key={idx} className="flex items-center gap-2 pl-1 pr-3 py-1 bg-gray-50 rounded-full border border-gray-200">
+                              <div className="w-5 h-5 rounded-full border border-gray-300 shadow-sm" style={{ backgroundColor: color.value }} />
+                              <span className="text-xs font-medium text-gray-700">{color.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Description/Details */}
-                  {selectedProduct.technicalDetails && (
-                    <div className="mb-8">
-                      <h4 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Ficha Técnica</h4>
-                      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                        {selectedProduct.technicalDetails}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Colors */}
-                  {safeColors(selectedProduct.availableColors).length > 0 && (
-                    <div className="mb-8">
-                      <h4 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Cores Disponíveis</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {safeColors(selectedProduct.availableColors).map((color, idx) => (
-                          <div key={idx} className="flex items-center gap-2 pl-1 pr-3 py-1 bg-gray-50 rounded-full border border-gray-200">
-                            <div className="w-5 h-5 rounded-full border border-gray-300 shadow-sm" style={{ backgroundColor: color.value }} />
-                            <span className="text-xs font-medium text-gray-700">{color.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-              </div>
-
-              {/* Fixed Bottom CTA with dynamic background */}
-              <div className={cn(
-                "absolute bottom-0 left-0 right-0 p-4 lg:p-6 shrink-0 transition-all duration-300 z-30 pb-6 lg:pb-6",
-                isAtBottom
-                  ? "bg-white border-t border-gray-100"
-                  : "bg-gradient-to-t from-white/80 to-transparent backdrop-blur-[2px] border-t border-transparent"
-              )}>
-                <motion.div
-                  animate={{ scale: [1, 1.02, 1] }}
-                  transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-                  className="w-full"
-                >
-                  <Button
-                    className="w-full h-12 sm:h-14 text-lg font-semibold shadow-xl transition-all active:scale-[0.98] rounded-xl sm:rounded-full"
-                    style={{ backgroundColor: '#25D366' }}
-                    onClick={() => openWhatsApp(selectedProduct.name, store.whatsapp)}
+                {/* Fixed Bottom CTA with dynamic background */}
+                <div className={cn(
+                  "absolute bottom-0 left-0 right-0 p-4 lg:p-6 shrink-0 transition-all duration-300 z-30 pb-6 lg:pb-6",
+                  isAtBottom
+                    ? "bg-white border-t border-gray-100"
+                    : "bg-gradient-to-t from-white/80 to-transparent backdrop-blur-[2px] border-t border-transparent"
+                )}>
+                  <motion.div
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                    className="w-full"
                   >
-                    <MessageCircle className="h-6 w-6 mr-2 fill-current" />
-                    Tenho Interesse
-                  </Button>
-                </motion.div>
+                    <Button
+                      className="w-full h-12 sm:h-14 text-lg font-semibold shadow-xl transition-all active:scale-[0.98] rounded-xl sm:rounded-full"
+                      style={{ backgroundColor: '#25D366' }}
+                      onClick={() => handleWhatsApp(selectedProduct.name, store.whatsapp)}
+                    >
+                      <MessageCircle className="h-6 w-6 mr-2 fill-current" />
+                      Tenho Interesse
+                    </Button>
+                  </motion.div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </Modal>
-    </div>
+          )}
+        </Modal>
+      </div>
+    </>
   );
 }

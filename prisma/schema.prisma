@@ -75,6 +75,8 @@ model Store {
   city            String?   @db.VarChar(100)
   state           String?   @db.VarChar(2)
   address         String?   @db.Text
+  metaPixelId     String?   @db.VarChar(100)
+  googleAdsId     String?   @db.VarChar(100)
   // Campos de controle administrativo
   isActive        Boolean   @default(true)
   isSuspended     Boolean   @default(false)

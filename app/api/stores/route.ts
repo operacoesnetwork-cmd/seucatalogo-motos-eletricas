@@ -52,10 +52,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate fresh signed URLs for store images
-    const logoUrl = store.logoKey 
+    const logoUrl = store.logoKey
       ? await getFileUrl(store.logoKey)
       : await getSignedUrlIfNeeded(store.logoUrl);
-    
+
     const bannerUrl = store.bannerKey
       ? await getFileUrl(store.bannerKey)
       : await getSignedUrlIfNeeded(store.bannerUrl);
@@ -206,6 +206,8 @@ export async function PUT(request: NextRequest) {
     if (body?.city !== undefined) updateData.city = body.city;
     if (body?.state !== undefined) updateData.state = body.state;
     if (body?.address !== undefined) updateData.address = body.address;
+    if (body?.metaPixelId !== undefined) updateData.metaPixelId = body.metaPixelId;
+    if (body?.googleAdsId !== undefined) updateData.googleAdsId = body.googleAdsId;
 
     const updatedStore = await prisma.store.update({
       where: { id: store.id },
