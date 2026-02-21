@@ -86,10 +86,21 @@ function StoreHeader({ store }: { store: Store }) {
   const handleStoreWhatsApp = (storeName: string, phone: string) => {
     try {
       if (typeof window !== "undefined") {
-        if (store.metaPixelId && (window as any).fbq) {
-          (window as any).fbq('track', 'Contact');
+        if (store.metaPixelId) {
+          const fire = () => {
+            if (typeof (window as any).fbq === 'function') {
+              console.log('[Pixel] Disparando Contact para:', storeName);
+              (window as any).fbq('track', 'Contact', { content_name: storeName });
+            }
+          };
+          if (typeof (window as any).fbq === 'function') fire();
+          else window.addEventListener('load', fire, { once: true });
+
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(`https://www.facebook.com/tr?id=${store.metaPixelId}&ev=Contact&noscript=1`);
+          }
         }
-        if (store.googleAdsId && (window as any).gtag) {
+        if (store.googleAdsId && typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'generate_lead', {
             event_category: 'engagement',
             event_label: 'WhatsApp Store General'
@@ -99,7 +110,11 @@ function StoreHeader({ store }: { store: Store }) {
     } catch (e) {
       console.error("Tracking error:", e);
     }
-    openStoreWhatsApp(storeName, phone);
+
+    // Pequeno atraso para garantir o disparo da requisição de rastreamento antes de abrir nova aba
+    setTimeout(() => {
+      openStoreWhatsApp(storeName, phone);
+    }, 300);
   };
 
   return (
@@ -222,7 +237,26 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
   // but for now, we'll respect custom BG or default to gray-50
   const appBgColor = store.backgroundColor || '#f9fafb';
 
-  // --- Modal Helpers ---
+  // --- Modal Helpers & Tracking ---
+
+  const trackEvent = (eventName: string, params?: object) => {
+    if (typeof window === "undefined") return;
+
+    const fire = () => {
+      if (typeof (window as any).fbq === 'function') {
+        console.log(`[Pixel] Tentando disparar ${eventName} para:`, params);
+        (window as any).fbq('track', eventName, params);
+      }
+    };
+
+    // Se fbq já está carregado, dispara imediatamente
+    if (typeof (window as any).fbq === 'function') {
+      fire();
+    } else {
+      // Caso contrário, aguarda o script carregar
+      window.addEventListener('load', fire, { once: true });
+    }
+  };
 
   const allImages = React.useMemo(() => {
     if (!selectedProduct) return [];
@@ -240,16 +274,20 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
       if (typeof window !== "undefined") {
         const itemData = {
           content_name: product.name,
-          content_category: product.category,
-          currency: "BRL",
-          value: product.discountPrice || product.basePrice || 0,
+          content_category: product.category
         };
         // Meta Pixel
-        if (store.metaPixelId && (window as any).fbq) {
-          (window as any).fbq('track', 'ViewContent', itemData);
+        if (store.metaPixelId) {
+          trackEvent('ViewContent', { content_name: product.name, content_category: product.category });
+
+          // Usa sendBeacon se disponível
+          const pixelUrl = `https://www.facebook.com/tr?id=${store.metaPixelId}&ev=ViewContent&noscript=1&cd[content_name]=${encodeURIComponent(product.name)}&cd[content_category]=${encodeURIComponent(product.category || '')}`;
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(pixelUrl);
+          }
         }
         // Google Ads
-        if (store.googleAdsId && (window as any).gtag) {
+        if (store.googleAdsId && typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'view_item', {
             items: [
               {
@@ -274,19 +312,21 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
     }
   }, []);
 
-  const handleWhatsApp = (productName: string, phone: string) => {
+  const handleWhatsApp = (productName: string, productCategory: string, phone: string) => {
     try {
       if (typeof window !== "undefined") {
-        const itemData = {
-          content_name: productName,
-          currency: "BRL",
-        };
         // Meta Pixel
-        if (store.metaPixelId && (window as any).fbq) {
-          (window as any).fbq('track', 'Lead', itemData);
+        if (store.metaPixelId) {
+          trackEvent('Contact', { content_name: productName, content_category: productCategory });
+
+          // Usa sendBeacon se disponível (não é cancelado pelo navegador)
+          const pixelUrl = `https://www.facebook.com/tr?id=${store.metaPixelId}&ev=Contact&noscript=1&cd[content_name]=${encodeURIComponent(productName)}&cd[content_category]=${encodeURIComponent(productCategory || '')}`;
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon(pixelUrl);
+          }
         }
         // Google Ads
-        if (store.googleAdsId && (window as any).gtag) {
+        if (store.googleAdsId && typeof (window as any).gtag === 'function') {
           (window as any).gtag('event', 'generate_lead', {
             event_category: 'engagement',
             event_label: 'WhatsApp Click',
@@ -297,7 +337,11 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
     } catch (e) {
       console.error("Tracking error:", e);
     }
-    openWhatsApp(productName, phone);
+
+    // Atraso de 300ms para garantir o disparo da requisição de rastreamento antes de redirecionar
+    setTimeout(() => {
+      openWhatsApp(productName, phone);
+    }, 300);
   };
 
   const handleStoreWhatsApp = (storeName: string, phone: string) => {
@@ -539,7 +583,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                                   style={{ backgroundColor: '#25D366', color: 'white' }}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleWhatsApp(product.name, store.whatsapp);
+                                    handleWhatsApp(product.name, product.category, store.whatsapp);
                                   }}
                                 >
                                   <MessageCircle className="h-4 w-4 fill-white/20" />
@@ -851,7 +895,7 @@ export function PublicCatalog({ store }: PublicCatalogProps) {
                     <Button
                       className="w-full h-12 sm:h-14 text-lg font-semibold shadow-xl transition-all active:scale-[0.98] rounded-xl sm:rounded-full"
                       style={{ backgroundColor: '#25D366' }}
-                      onClick={() => handleWhatsApp(selectedProduct.name, store.whatsapp)}
+                      onClick={() => handleWhatsApp(selectedProduct.name, selectedProduct.category, store.whatsapp)}
                     >
                       <MessageCircle className="h-6 w-6 mr-2 fill-current" />
                       Tenho Interesse
